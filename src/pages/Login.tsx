@@ -1,27 +1,19 @@
 import { FcGoogle } from 'react-icons/fc'
 import { LuBrain } from 'react-icons/lu'
 import { useAuth } from '@/hooks/useAuth'
+import { ShaderAnimation } from '@/components/ShaderAnimation'
 
 export default function Login() {
   const { signInWithGoogle } = useAuth()
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Background ambient blobs */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-amber/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-indigo-500/5 rounded-full blur-3xl" />
-      </div>
 
-      {/* Grid overlay */}
-      <div
-        className="absolute inset-0 pointer-events-none opacity-[0.03]"
-        style={{
-          backgroundImage:
-            'linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)',
-          backgroundSize: '40px 40px',
-        }}
-      />
+      {/* Shader background */}
+      <ShaderAnimation />
+
+      {/* Dark overlay so card is readable */}
+      <div className="absolute inset-0 z-[1] bg-background/70 backdrop-blur-[2px]" />
 
       <div className="relative z-10 w-full max-w-sm animate-slide-up">
         {/* Logo */}
@@ -38,7 +30,7 @@ export default function Login() {
         </div>
 
         {/* Card */}
-        <div className="bg-card border border-border rounded-2xl p-8 shadow-card">
+        <div className="bg-card/90 backdrop-blur-sm border border-border rounded-2xl p-8 shadow-card">
           <div className="text-center mb-8">
             <h1 className="text-2xl font-semibold text-white mb-2">Welcome back</h1>
             <p className="text-muted text-sm leading-relaxed">
@@ -46,9 +38,8 @@ export default function Login() {
             </p>
           </div>
 
-          {/* Exam countdown teaser */}
           <div className="bg-surface border border-border rounded-xl p-4 mb-6 text-center">
-            <p className="text-xs text-muted font-mono uppercase tracking-widest mb-1">GATE 2027</p>
+            <p className="text-xs text-muted font-mono uppercase tracking-widest mb-1">GATE</p>
             <p className="text-amber font-mono font-medium text-sm">Feb 7, 2027 · CS/IT</p>
           </div>
 
@@ -64,10 +55,6 @@ export default function Login() {
             By signing in, you agree to use this tracker<br />for educational purposes only.
           </p>
         </div>
-
-        <p className="text-center text-subtle text-xs mt-6 font-mono">
-          built for cs/it · gate 2027
-        </p>
       </div>
     </div>
   )
