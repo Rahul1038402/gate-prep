@@ -1,5 +1,5 @@
 import { format, parseISO } from 'date-fns'
-import { X, BookOpen, Clock, HelpCircle, PlayCircle, StickyNote, CalendarDays } from 'lucide-react'
+import { X, Clock, HelpCircle, StickyNote, CalendarDays } from 'lucide-react'
 import type { DailyProgress, Subject } from '@/types'
 
 interface HistoryModalProps {
@@ -24,17 +24,18 @@ function EntryCard({ entry, onEdit }: { entry: DailyProgress; onEdit: () => void
 
   return (
     <div className="bg-surface border border-border rounded-xl p-4 hover:border-subtle transition-all">
+
       {/* Date + edit */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <CalendarDays className="w-3.5 h-3.5 text-muted" />
-          <span className="text-white text-sm font-medium">
+          <span className="text-[#4ade80] text-sm font-medium">
             {format(parseISO(entry.date), 'EEEE, dd MMM')}
           </span>
         </div>
         <div className="flex items-center gap-3">
           {totalHours > 0 && (
-            <span className="text-amber font-mono text-xs font-medium">{totalHours.toFixed(1)}h</span>
+            <span className="hidden sm:block text-amber font-mono text-xs font-medium">{totalHours.toFixed(1)}h</span>
           )}
           <button
             onClick={onEdit}
@@ -45,53 +46,63 @@ function EntryCard({ entry, onEdit }: { entry: DailyProgress; onEdit: () => void
         </div>
       </div>
 
-      {/* Content grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        {entry.chapters && (
-          <div className="flex gap-2">
-            <BookOpen className="w-3.5 h-3.5 text-muted shrink-0 mt-0.5" />
-            <div>
-              <p className="text-[10px] text-muted font-mono uppercase tracking-widest mb-0.5">Chapters</p>
-              <p className="text-white text-xs leading-relaxed">{entry.chapters}</p>
-            </div>
-          </div>
-        )}
-
-        {entry.topics && (
-          <div className="flex gap-2">
-            <BookOpen className="w-3.5 h-3.5 text-muted shrink-0 mt-0.5" />
-            <div>
-              <p className="text-[10px] text-muted font-mono uppercase tracking-widest mb-0.5">Topics</p>
-              <p className="text-white text-xs leading-relaxed">{entry.topics}</p>
-            </div>
-          </div>
-        )}
-
-        {(entry.study_hours > 0 || entry.question_hours > 0) && (
-          <div className="flex gap-4">
-            {entry.study_hours > 0 && (
-              <div className="flex items-center gap-1.5">
-                <Clock className="w-3.5 h-3.5 text-muted" />
-                <span className="text-xs text-white font-mono">{entry.study_hours}h study</span>
-              </div>
-            )}
-            {entry.question_hours > 0 && (
-              <div className="flex items-center gap-1.5">
-                <HelpCircle className="w-3.5 h-3.5 text-muted" />
-                <span className="text-xs text-white font-mono">{entry.question_hours}h Q&amp;A</span>
-              </div>
-            )}
-          </div>
-        )}
-
-        {entry.lecture_number > 0 && (
-          <div className="flex items-center gap-1.5">
-            <PlayCircle className="w-3.5 h-3.5 text-muted" />
-            <span className="text-xs text-white font-mono">Lecture {entry.lecture_number}</span>
-          </div>
-        )}
+      {/* Chapters */}
+      <div className="mb-2">
+        <p className="text-[10px] text-muted font-mono uppercase tracking-widest mb-0.5">Chapters</p>
+        <p className={`text-base font-medium leading-snug ${entry.chapters ? 'text-white' : 'text-subtle'}`}>
+          {entry.chapters || 'N/A'}
+        </p>
       </div>
 
+      {/* Topics + Lecture */}
+      <div className="flex flex-col gap-1 mb-1">
+        <div className="flex items-baseline gap-2">
+          <span className="text-[10px] text-muted font-mono uppercase tracking-widest shrink-0">Topics</span>
+          <p className={`text-xs leading-relaxed ${entry.topics ? 'text-white/80' : 'text-subtle'}`}>
+            {entry.topics || 'N/A'}
+          </p>
+        </div>
+        <div className="flex items-baseline gap-2">
+          <span className="text-[10px] text-muted font-mono uppercase tracking-widest shrink-0">Lecture</span>
+          <p className={`text-xs font-mono ${entry.lecture_number > 0 ? 'text-white/80' : 'text-subtle'}`}>
+            {entry.lecture_number > 0 ? `#${entry.lecture_number}` : 'N/A'}
+          </p>
+        </div>
+      </div>
+
+      {/* Times */}
+      <div className="flex sm:flex-row flex-col sm:items-center sm:gap-24 mt-2">
+        <div className="flex items-center gap-1">
+          <Clock className="w-3 h-3 text-subtle" />
+          <span className="font-mono text-muted text-[14px] mr-1">Study:</span>
+          <span className={`font-mono ${entry.study_hours > 0 ? 'text-muted' : 'text-subtle'}`}>
+            {entry.study_hours > 0 ? (
+              <>
+                <span className="text-[18px] text-amber">{entry.study_hours}hr</span>
+
+              </>
+            ) : (
+              'N/A'
+            )}
+          </span>
+        </div>
+        <div className="flex items-center gap-1">
+          <HelpCircle className="w-3 h-3 text-subtle" />
+          <span className="font-mono text-muted text-[14px] mr-1">Q-Solving:</span>
+          <span className={`font-mono ${entry.question_hours > 0 ? 'text-muted' : 'text-subtle'}`}>
+            {entry.question_hours > 0 ? (
+              <>
+                <span className="text-[18px] text-amber">{entry.question_hours}hr</span>
+
+              </>
+            ) : (
+              'N/A'
+            )}
+          </span>
+        </div>
+      </div>
+
+      {/* Notes */}
       {entry.notes && (
         <div className="mt-3 pt-3 border-t border-border flex gap-2">
           <StickyNote className="w-3.5 h-3.5 text-muted shrink-0 mt-0.5" />
@@ -106,7 +117,7 @@ export default function HistoryModal({ isOpen, onClose, subject, entries, onEdit
   if (!isOpen) return null
 
   const grouped = groupByMonth(entries)
-  const months = Object.keys(grouped) // already sorted newest first from DB
+  const months = Object.keys(grouped)
 
   const totalHours = entries.reduce((sum, e) => sum + (e.study_hours || 0) + (e.question_hours || 0), 0)
 
@@ -148,7 +159,6 @@ export default function HistoryModal({ isOpen, onClose, subject, entries, onEdit
             <div className="space-y-8">
               {months.map(month => (
                 <div key={month}>
-                  {/* Month header */}
                   <div className="flex items-center gap-3 mb-4">
                     <h3 className="text-white font-semibold text-sm">{month}</h3>
                     <div className="flex-1 h-px bg-border" />
@@ -157,8 +167,6 @@ export default function HistoryModal({ isOpen, onClose, subject, entries, onEdit
                       {grouped[month].reduce((s, e) => s + (e.study_hours || 0) + (e.question_hours || 0), 0).toFixed(1)}h
                     </span>
                   </div>
-
-                  {/* Entries */}
                   <div className="space-y-3">
                     {grouped[month].map(entry => (
                       <EntryCard

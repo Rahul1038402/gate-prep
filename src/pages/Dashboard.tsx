@@ -117,7 +117,7 @@ export default function Dashboard({ user }: DashboardProps) {
                         <span className="text-white font-semibold text-sm tracking-tight">Gate Tracker 2027</span>
                     </div>
                     <div className="flex items-center gap-3">
-                        <div className="hidden sm:flex items-center gap-2">
+                        <div className="flex items-center gap-2">
                             {avatarUrl && <img src={avatarUrl} alt={displayName} className="w-7 h-7 rounded-full border border-border" />}
                         </div>
                         <button
@@ -125,7 +125,7 @@ export default function Dashboard({ user }: DashboardProps) {
                             className="flex items-center gap-1.5 text-white text-xs px-3 py-1.5 rounded-lg hover:bg-red-500/50 border border-border transition-all"
                         >
                             <LogOut className="w-3.5 h-3.5" />
-                            <span className="hidden sm:block">Sign out</span>
+                            <span className="">Sign out</span>
                         </button>
                     </div>
                 </div>
