@@ -8,6 +8,8 @@ import { useProgress } from '@/hooks/useProgress'
 import MiniCalendar from '@/components/MiniCalendar'
 import ProgressModal from '@/components/ProgressModal'
 import HistoryModal from '@/components/HistoryModal'
+import TimerPiP from '@/components/TimerPip'
+import type { TimerType } from '@/components/TimerPip'
 import type { DailyProgress, ProgressFormData } from '@/types'
 import { useAuth } from '@/hooks/useAuth'
 
@@ -40,6 +42,7 @@ export default function SubjectPage({ user }: SubjectPageProps) {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date())
   const [dayProgress, setDayProgress] = useState<DailyProgress | null>(null)
   const [saving, setSaving] = useState(false)
+  const [timerFilledField, setTimerFilledField] = useState<'study_hours' | 'question_hours' | null>(null)
 
   // Stats
   const totalStudyHours = allEntries.reduce((s, e) => s + (e.study_hours || 0), 0)
@@ -79,6 +82,7 @@ export default function SubjectPage({ user }: SubjectPageProps) {
     setSelectedDate(date)
     const prog = await fetchDayProgress(subject.id, format(date, 'yyyy-MM-dd'))
     setDayProgress(prog)
+    setTimerFilledField(null)
     setProgressModalOpen(true)
   }
 
@@ -106,6 +110,30 @@ export default function SubjectPage({ user }: SubjectPageProps) {
     await reload()
   }
 
+  //  Timer session complete → merge hours into today's progress modal 
+  const handleSessionComplete = async (hours: number, type: TimerType) => {
+    const today = new Date()
+    const todayStr = format(today, 'yyyy-MM-dd')
+    setSelectedDate(today)
+
+    const existing = await fetchDayProgress(subject.id, todayStr)
+
+    const merged: DailyProgress = {
+      ...(existing || {} as DailyProgress),
+      study_hours: type === 'study'
+        ? parseFloat(((existing?.study_hours || 0) + hours).toFixed(2))
+        : (existing?.study_hours || 0),
+      question_hours: type === 'qsolve'
+        ? parseFloat(((existing?.question_hours || 0) + hours).toFixed(2))
+        : (existing?.question_hours || 0),
+    }
+
+    setDayProgress(merged)
+    setTimerFilledField(type === 'study' ? 'study_hours' : 'question_hours')
+    setProgressModalOpen(true)
+  }
+  // 
+
   const { signOut } = useAuth()
   const displayName = (user.user_metadata?.full_name as string) || user.email?.split('@')[0] || 'Aspirant'
   const avatarUrl = user.user_metadata?.avatar_url as string | undefined
@@ -129,21 +157,19 @@ export default function SubjectPage({ user }: SubjectPageProps) {
               <span className="text-white text-sm font-medium">{subject.shortName}</span>
             </div>
           </div>
-                  <div className="flex items-center gap-3">
-          <div className="hidden sm:flex items-center gap-2">
-            {avatarUrl && <img src={avatarUrl} alt={displayName} className="w-7 h-7 rounded-full border border-border" />}
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              {avatarUrl && <img src={avatarUrl} alt={displayName} className="w-7 h-7 rounded-full border border-border" />}
+            </div>
+            <button
+              onClick={signOut}
+              className="flex items-center gap-1.5 text-white text-xs px-3 py-1.5 rounded-lg hover:bg-red-500/50 border border-border transition-all"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span>Sign out</span>
+            </button>
           </div>
-          <button
-            onClick={signOut}
-            className="flex items-center gap-1.5 text-white text-xs px-3 py-1.5 rounded-lg hover:bg-red-500/50 border border-border transition-all"
-          >
-            <LogOut className="w-3.5 h-3.5" />
-            <span className="hidden sm:block">Sign out</span>
-          </button>
         </div>
-        </div>
-
-
       </header>
 
       <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
@@ -153,14 +179,19 @@ export default function SubjectPage({ user }: SubjectPageProps) {
             <p className="text-muted text-sm font-mono">{subject.shortName} · GATE 2027 CS/IT</p>
           </div>
 
-          <button
-            onClick={() => setHistoryModalOpen(true)}
-            className="flex items-center gap-1.5 text-white hover:bg-neutral-800 text-sm px-3 py-1.5 rounded-lg bg-card border border-border transition-all"
-          >
-            <History className="w-4 h-4" />
-            <span>History</span>
-          </button>
+          {/* Action buttons — Timer sits alongside History */}
+          <div className="flex items-center gap-2">
+            <TimerPiP subject={subject} onSessionComplete={handleSessionComplete} />  {/* ← NEW */}
+            <button
+              onClick={() => setHistoryModalOpen(true)}
+              className="flex items-center gap-1.5 text-white hover:bg-neutral-800 text-sm px-3 py-1.5 rounded-lg bg-card border border-border transition-all"
+            >
+              <History className="w-4 h-4" />
+              <span>History</span>
+            </button>
+          </div>
         </div>
+
         {/* Stats row */}
         <div className="grid grid-cols-3 gap-3 mb-8">
           <div className="bg-card border border-border rounded-xl p-4 text-center">
@@ -180,7 +211,7 @@ export default function SubjectPage({ user }: SubjectPageProps) {
           </div>
         </div>
 
-        {/* Calendar — large, centered */}
+        {/* Calendar */}
         <div className="bg-card border border-border rounded-2xl p-6 sm:p-8 max-w-5xl mx-auto animate-slide-up overflow-hidden">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-white font-semibold text-sm">Activity Calendar</h2>
@@ -219,6 +250,7 @@ export default function SubjectPage({ user }: SubjectPageProps) {
         onSave={handleSave}
         onDelete={dayProgress ? handleDelete : undefined}
         saving={saving}
+        timerFilledField={timerFilledField}
       />
 
       <HistoryModal
