@@ -1,73 +1,48 @@
-# React + TypeScript + Vite
+# GATE Tracker 2027
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A focused daily prep tracker for GATE 2027 (CS/IT). Track chapters, topics, study hours, question-solving hours, and lecture numbers for all 10 subjects with a per-subject calendar view.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Tech Stack
 
-## React Compiler
+- **React 18** + **Vite** + **TypeScript**
+- **Tailwind CSS** (dark theme, Outfit + IBM Plex Mono fonts)
+- **Supabase** (Postgres database + Google OAuth)
+- **shadcn/ui** components (Radix UI primitives)
+- **date-fns** for calendar logic
+- **lucide-react** + **react-icons**
 
-The React Compiler is currently not compatible with SWC. See [this issue](https://github.com/vitejs/vite-plugin-react/issues/428) for tracking the progress.
+---
 
-## Expanding the ESLint configuration
+## Subjects Covered (CS/IT Standard Syllabus)
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+1. Engineering Mathematics
+2. Digital Logic
+3. Computer Organization & Architecture
+4. Programming & Data Structures
+5. Algorithms
+6. Theory of Computation
+7. Compiler Design
+8. Operating Systems
+9. Databases
+10. Computer Networks
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+---
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## Daily Progress Fields
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+For each subject, on each date, you can log:
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+| Field | Description |
+|-------|-------------|
+| **Chapters** | Chapter names/numbers covered |
+| **Topics** | Specific topics studied |
+| **Study Hours** | Hours spent studying theory |
+| **Q-Solving Hours** | Hours spent on practice questions |
+| **Lecture Number** | Current lecture in your subscribed course |
+| **Notes** | Free-form observations or doubts |
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+---
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+Good luck with your prep! 🚀
