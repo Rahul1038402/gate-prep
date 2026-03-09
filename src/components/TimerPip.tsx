@@ -270,13 +270,13 @@ function SetupModal({ subject, onStart, onClose }: {
                 <div className="flex gap-2 mt-6">
                     <button
                         onClick={onClose}
-                        className="flex-1 px-4 py-2.5 rounded-xl bg-red-400/10 border border-red-400 text-red-400 text-xs font-mono hover:text-red-300 transition-colors"
+                        className="flex-1 px-4 py-2.5 rounded-xl border border-border text-muted text-xs font-mono hover:text-white transition-colors"
                     >
                         Cancel
                     </button>
                     <button
                         onClick={() => onStart(mode, type, minutes)}
-                        className="flex-1 px-4 py-2.5 rounded-xl bg-[#4ade80]/10 border border-[#4ade80] text-[#4ade80] text-xs font-mono hover:bg-[#4ade80]/20 transition-colors"
+                        className="flex-1 px-4 py-2.5 rounded-xl bg-amber/10 border border-amber text-amber text-xs font-mono hover:bg-amber/20 transition-colors"
                     >
                         Start →
                     </button>
@@ -343,7 +343,124 @@ function SummaryModal({ seconds, type, subject, onLog, onDiscard }: {
     )
 }
 
-//  Main Export 
+//  Floating Overlay (mobile fallback) 
+
+function FloatingOverlay({
+    subject, displayTime, countdownProgress, mode, type, isPaused, onPause, onResume, onStop,
+}: PiPContentProps) {
+    const [pos, setPos] = useState({ x: 16, y: 16 })
+    const dragging = useRef(false)
+    const dragStart = useRef({ mx: 0, my: 0, ox: 0, oy: 0 })
+
+    const onPointerDown = (e: React.PointerEvent) => {
+        dragging.current = true
+        dragStart.current = { mx: e.clientX, my: e.clientY, ox: pos.x, oy: pos.y }
+        ;(e.target as HTMLElement).setPointerCapture(e.pointerId)
+    }
+    const onPointerMove = (e: React.PointerEvent) => {
+        if (!dragging.current) return
+        setPos({
+            x: dragStart.current.ox + (e.clientX - dragStart.current.mx),
+            y: dragStart.current.oy + (e.clientY - dragStart.current.my),
+        })
+    }
+    const onPointerUp = () => { dragging.current = false }
+
+    return createPortal(
+        <div
+            style={{
+                position: 'fixed',
+                left: pos.x,
+                top: pos.y,
+                zIndex: 9999,
+                width: '200px',
+                background: '#0d0d0d',
+                border: '1px solid #2a2a2a',
+                borderRadius: '16px',
+                padding: '14px 12px',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '8px',
+                fontFamily: 'ui-monospace, "SF Mono", monospace',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
+                userSelect: 'none',
+                touchAction: 'none',
+            }}
+            onPointerDown={onPointerDown}
+            onPointerMove={onPointerMove}
+            onPointerUp={onPointerUp}
+        >
+            {/* Drag handle */}
+            <div style={{ width: '28px', height: '3px', background: '#333', borderRadius: '99px', marginBottom: '2px' }} />
+
+            {/* Subject */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                <div style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: subject.color }} />
+                <span style={{ fontSize: '9px', color: '#666', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+                    {subject.shortName}
+                </span>
+            </div>
+
+            {/* Time */}
+            <div style={{
+                fontSize: '32px', fontWeight: '500', letterSpacing: '-0.03em',
+                color: isPaused ? '#444' : '#fff', lineHeight: 1,
+                transition: 'color 0.3s',
+            }}>
+                {displayTime}
+            </div>
+
+            {/* Type */}
+            <div style={{ fontSize: '9px', color: subject.color, letterSpacing: '0.12em', textTransform: 'uppercase' }}>
+                {type === 'study' ? '📖 Study' : '📝 Q-Solve'}
+            </div>
+
+            {/* Countdown bar */}
+            {mode === 'countdown' && (
+                <div style={{ width: '80%', height: '2px', background: '#222', borderRadius: '2px', overflow: 'hidden' }}>
+                    <div style={{
+                        height: '100%', width: `${countdownProgress * 100}%`,
+                        background: subject.color, transition: 'width 0.8s linear',
+                    }} />
+                </div>
+            )}
+
+            {isPaused && (
+                <div style={{ fontSize: '9px', color: '#555', letterSpacing: '0.1em' }}>PAUSED</div>
+            )}
+
+            {/* Controls */}
+            <div style={{ display: 'flex', gap: '6px', marginTop: '2px' }}>
+                <button
+                    onPointerDown={e => e.stopPropagation()}
+                    onClick={isPaused ? onResume : onPause}
+                    style={{
+                        background: '#1c1c1c', border: '1px solid #333', borderRadius: '8px',
+                        color: '#ccc', padding: '5px 10px', fontSize: '10px',
+                        cursor: 'pointer', fontFamily: 'inherit',
+                    }}
+                >
+                    {isPaused ? '▶' : '⏸'}
+                </button>
+                <button
+                    onPointerDown={e => e.stopPropagation()}
+                    onClick={onStop}
+                    style={{
+                        background: '#1c1c1c', border: '1px solid #7f1d1d', borderRadius: '8px',
+                        color: '#ef4444', padding: '5px 10px', fontSize: '10px',
+                        cursor: 'pointer', fontFamily: 'inherit',
+                    }}
+                >
+                    ■ Stop
+                </button>
+            </div>
+        </div>,
+        document.body,
+    )
+}
+
+
 
 export default function TimerPiP({ subject, onSessionComplete }: TimerPiPProps) {
     const [phase, setPhase] = useState<Phase>('idle')
@@ -354,6 +471,7 @@ export default function TimerPiP({ subject, onSessionComplete }: TimerPiPProps) 
     const [isPaused, setIsPaused] = useState(false)
     const [pipBody, setPipBody] = useState<Element | null>(null)
     const [finalSeconds, setFinalSeconds] = useState(0)
+    const [useFloatingOverlay, setUseFloatingOverlay] = useState(false)
 
     // Refs for use in closures / event listeners
     const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -402,9 +520,11 @@ export default function TimerPiP({ subject, onSessionComplete }: TimerPiPProps) 
     //  Open PiP 
     const openPiP = useCallback(async (): Promise<boolean> => {
         if (!(window as any).documentPictureInPicture) {
-            alert('Picture-in-Picture is not supported in this browser.\nPlease use Chrome 116 or later.')
-            return false
+            // Mobile / unsupported browser — use floating overlay fallback
+            setUseFloatingOverlay(true)
+            return true
         }
+        setUseFloatingOverlay(false)
         try {
             const pip: Window = await (window as any).documentPictureInPicture.requestWindow({
                 width: 280,
@@ -494,7 +614,7 @@ export default function TimerPiP({ subject, onSessionComplete }: TimerPiPProps) 
                 />
             )}
 
-            {/* PiP portal — renders into the floating pip window */}
+            {/* PiP portal — renders into the floating pip window (desktop) */}
             {pipBody && createPortal(
                 <PiPContent
                     subject={subject}
@@ -508,6 +628,21 @@ export default function TimerPiP({ subject, onSessionComplete }: TimerPiPProps) 
                     onStop={stopTimer}
                 />,
                 pipBody,
+            )}
+
+            {/* Floating overlay — mobile fallback */}
+            {phase === 'running' && useFloatingOverlay && (
+                <FloatingOverlay
+                    subject={subject}
+                    displayTime={displayTime}
+                    countdownProgress={countdownProgress}
+                    mode={mode}
+                    type={type}
+                    isPaused={isPaused}
+                    onPause={() => setIsPaused(true)}
+                    onResume={() => setIsPaused(false)}
+                    onStop={stopTimer}
+                />
             )}
 
             {/* Summary modal */}
