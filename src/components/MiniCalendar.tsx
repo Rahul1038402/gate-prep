@@ -9,8 +9,8 @@ import { cn } from '@/lib/utils'
 
 interface MiniCalendarProps {
     subjectColor: string
-    activeDates: Set<string>      // dates WITH entries (green)
-    prepStartDate: string | null  // dates from here onward with no entry = red
+    activeDates: Set<string>
+    prepStartDate: string | null
     onDateClick: (date: Date) => void
 }
 
