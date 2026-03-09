@@ -2,6 +2,8 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { Timer, BookOpen, HelpCircle } from 'lucide-react'
 
+//  Types 
+
 type TimerMode = 'stopwatch' | 'countdown'
 export type TimerType = 'study' | 'qsolve'
 type Phase = 'idle' | 'setup' | 'running' | 'summary'
@@ -17,6 +19,7 @@ export interface TimerPiPProps {
     onSessionComplete: (hours: number, type: TimerType) => void
 }
 
+//  Helpers 
 
 function formatTime(seconds: number): string {
     const h = Math.floor(seconds / 3600)
@@ -28,7 +31,7 @@ function formatTime(seconds: number): string {
     return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
 }
 
-// PiP Content
+//  PiP Content (inline styles — no Tailwind in pip window) 
 
 interface PiPContentProps {
     subject: Subject
@@ -169,7 +172,7 @@ function PiPContent({
     )
 }
 
-// Setup Modal
+//  Setup Modal 
 
 const PRESET_MINUTES = [25, 45, 60, 90, 120]
 
@@ -283,7 +286,7 @@ function SetupModal({ subject, onStart, onClose }: {
     )
 }
 
-// Summary Modal 
+//  Summary Modal 
 
 function SummaryModal({ seconds, type, subject, onLog, onDiscard }: {
     seconds: number
@@ -340,7 +343,7 @@ function SummaryModal({ seconds, type, subject, onLog, onDiscard }: {
     )
 }
 
-// Main Export 
+//  Main Export 
 
 export default function TimerPiP({ subject, onSessionComplete }: TimerPiPProps) {
     const [phase, setPhase] = useState<Phase>('idle')
@@ -349,7 +352,6 @@ export default function TimerPiP({ subject, onSessionComplete }: TimerPiPProps) 
     const [countdownMinutes, setCountdownMinutes] = useState(60)
     const [elapsed, setElapsed] = useState(0)
     const [isPaused, setIsPaused] = useState(false)
-    const [pipWindow, setPipWindow] = useState<Window | null>(null)
     const [pipBody, setPipBody] = useState<Element | null>(null)
     const [finalSeconds, setFinalSeconds] = useState(0)
 
@@ -357,10 +359,11 @@ export default function TimerPiP({ subject, onSessionComplete }: TimerPiPProps) 
     const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
     const elapsedRef = useRef(0)
     const phaseRef = useRef<Phase>('idle')
+    const pipWindowRef = useRef<Window | null>(null)
 
     useEffect(() => { phaseRef.current = phase }, [phase])
 
-    // ── Ticker ──
+    //  Ticker 
     useEffect(() => {
         if (phase !== 'running' || isPaused) {
             if (intervalRef.current) clearInterval(intervalRef.current)
@@ -376,7 +379,7 @@ export default function TimerPiP({ subject, onSessionComplete }: TimerPiPProps) 
         return () => { if (intervalRef.current) clearInterval(intervalRef.current) }
     }, [phase, isPaused])
 
-    // ── Countdown auto-stop ──
+    //  Countdown auto-stop 
     const countdownTotal = countdownMinutes * 60
     useEffect(() => {
         if (mode === 'countdown' && phase === 'running' && elapsed >= countdownTotal) {
@@ -385,17 +388,18 @@ export default function TimerPiP({ subject, onSessionComplete }: TimerPiPProps) 
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [elapsed])
 
-    // ── Stop ──
+    //  Stop 
     const stopTimer = useCallback(() => {
         if (intervalRef.current) clearInterval(intervalRef.current)
         const final = elapsedRef.current
         setFinalSeconds(final)
-        setPipWindow(prev => { prev?.close(); return null })
+        pipWindowRef.current?.close()
+        pipWindowRef.current = null
         setPipBody(null)
         setPhase('summary')
     }, [])
 
-    // ── Open PiP ──
+    //  Open PiP 
     const openPiP = useCallback(async (): Promise<boolean> => {
         if (!(window as any).documentPictureInPicture) {
             alert('Picture-in-Picture is not supported in this browser.\nPlease use Chrome 116 or later.')
@@ -420,13 +424,13 @@ export default function TimerPiP({ subject, onSessionComplete }: TimerPiPProps) 
                 if (phaseRef.current === 'running') {
                     setFinalSeconds(elapsedRef.current)
                     setPipBody(null)
-                    setPipWindow(null)
+                    pipWindowRef.current = null
                     setPhase('summary')
                     if (intervalRef.current) clearInterval(intervalRef.current)
                 }
             })
 
-            setPipWindow(pip)
+            pipWindowRef.current = pip
             setPipBody(pip.document.body)
             return true
         } catch (err) {
@@ -435,7 +439,7 @@ export default function TimerPiP({ subject, onSessionComplete }: TimerPiPProps) 
         }
     }, [])
 
-    // ── Start ──
+    //  Start 
     const handleStart = async (m: TimerMode, t: TimerType, mins: number) => {
         setMode(m)
         setType(t)
@@ -447,7 +451,7 @@ export default function TimerPiP({ subject, onSessionComplete }: TimerPiPProps) 
         if (ok) setPhase('running')
     }
 
-    // ── Derived display values ──
+    //  Derived display values 
     const displayTime = mode === 'countdown'
         ? formatTime(Math.max(0, countdownTotal - elapsed))
         : formatTime(elapsed)
@@ -469,7 +473,7 @@ export default function TimerPiP({ subject, onSessionComplete }: TimerPiPProps) 
                 </button>
             )}
 
-            {/* Running */}
+            {/* Running — pulsing indicator in place of button */}
             {(phase === 'running') && (
                 <button
                     onClick={stopTimer}
