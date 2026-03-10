@@ -1,6 +1,7 @@
 import { format, parseISO } from 'date-fns'
 import { X, Clock, HelpCircle, StickyNote, CalendarDays } from 'lucide-react'
 import type { DailyProgress, Subject } from '@/types'
+import { useEffect } from 'react'
 
 interface HistoryModalProps {
   isOpen: boolean
@@ -120,6 +121,16 @@ export default function HistoryModal({ isOpen, onClose, subject, entries, onEdit
   const months = Object.keys(grouped)
 
   const totalHours = entries.reduce((sum, e) => sum + (e.study_hours || 0) + (e.question_hours || 0), 0)
+
+  // To prevent background scrolling when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => { document.body.style.overflow = '' }
+  }, [isOpen])
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">

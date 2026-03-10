@@ -111,6 +111,16 @@ export default function ProgressModal({
   const [studiedKeys, setStudiedKeys] = useState<Set<string>>(new Set())
   const [newlyDoneKeys, setNewlyDoneKeys] = useState<Set<string>>(new Set())
 
+  // To prevent background scrolling when modal is open
+  useEffect(() => {
+  if (isOpen) {
+    document.body.style.overflow = 'hidden'
+  } else {
+    document.body.style.overflow = ''
+  }
+  return () => { document.body.style.overflow = '' }
+}, [isOpen])
+
   const chapters = subject.chapters ?? []
   const selectedChapter = chapters.find(c => c.id === selectedChapterId) ?? null
 
