@@ -1,24 +1,17 @@
+export interface Chapter {
+  id: string
+  name: string
+  topics: string[]
+  zeroWeightTopics?: string[]
+}
+
 export interface Subject {
   id: string
   name: string
   shortName: string
   color: string
   icon: string
-}
-
-export interface DailyProgress {
-  id?: string
-  user_id: string
-  subject_id: string
-  date: string // ISO format YYYY-MM-DD
-  chapters: string
-  topics: string
-  study_hours: number
-  question_hours: number
-  lecture_number: number
-  notes: string
-  created_at?: string
-  updated_at?: string
+  chapters?: Chapter[]
 }
 
 export interface ProgressFormData {
@@ -26,8 +19,25 @@ export interface ProgressFormData {
   topics: string
   study_hours: number
   question_hours: number
-  lecture_number: number
+  lecture_number: string
   notes: string
+  studied_topics?: string[]
+  newly_completed_topics?: string[]
+}
+
+export interface DailyProgress {
+  id?: string
+  user_id: string
+  subject_id: string
+  date: string
+  chapters: string
+  topics: string
+  study_hours: number
+  question_hours: number
+  lecture_number: string
+  notes: string
+  created_at?: string
+  updated_at?: string
 }
 
 export type UserProfile = {
