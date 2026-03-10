@@ -125,7 +125,7 @@ export default function Dashboard({ user }: DashboardProps) {
                             className="flex items-center gap-1.5 text-white text-xs px-3 py-1.5 rounded-lg hover:bg-red-500/50 border border-border transition-all"
                         >
                             <LogOut className="w-3.5 h-3.5" />
-                            <span className="">Sign out</span>
+                            <span>Sign out</span>
                         </button>
                     </div>
                 </div>
