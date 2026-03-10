@@ -64,8 +64,8 @@ function EntryCard({ entry, onEdit }: { entry: DailyProgress; onEdit: () => void
         </div>
         <div className="flex items-baseline gap-2">
           <span className="text-[10px] text-muted font-mono uppercase tracking-widest shrink-0">Lecture</span>
-          <p className={`text-xs font-mono ${entry.lecture_number > 0 ? 'text-white/80' : 'text-subtle'}`}>
-            {entry.lecture_number > 0 ? `#${entry.lecture_number}` : 'N/A'}
+          <p className={`text-xs font-mono ${entry.lecture_number ? 'text-white/80' : 'text-subtle'}`}>
+            {entry.lecture_number ? `#${entry.lecture_number}` : 'N/A'}
           </p>
         </div>
       </div>
