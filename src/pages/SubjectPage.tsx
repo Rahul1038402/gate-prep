@@ -5,9 +5,11 @@ import type { User } from '@supabase/supabase-js'
 import { ArrowLeft, History, CalendarDays, Clock, HelpCircle, LogOut } from 'lucide-react'
 import { SUBJECTS } from '@/lib/constants'
 import { useProgress } from '@/hooks/useProgress'
+import { fetchCompletedTopics, saveCompletedTopics, deleteCompletedTopicsForDate } from '@/lib/topic-progress'
 import MiniCalendar from '@/components/MiniCalendar'
 import ProgressModal from '@/components/ProgressModal'
 import HistoryModal from '@/components/HistoryModal'
+import SubjectProgressChart from '@/components/SubjectProgressChart'
 import TimerPiP from '@/components/TimerPip'
 import type { TimerType } from '@/components/TimerPip'
 import type { DailyProgress, ProgressFormData } from '@/types'
@@ -35,6 +37,7 @@ export default function SubjectPage({ user }: SubjectPageProps) {
   const [activeDates, setActiveDates] = useState<Set<string>>(new Set())
   const [prepStartDate, setPrepStartDate] = useState<string | null>(null)
   const [allEntries, setAllEntries] = useState<DailyProgress[]>([])
+  const [completedTopics, setCompletedTopics] = useState<Set<string>>(new Set())
 
   // Modal state
   const [progressModalOpen, setProgressModalOpen] = useState(false)
@@ -51,15 +54,17 @@ export default function SubjectPage({ user }: SubjectPageProps) {
 
   const reload = useCallback(async () => {
     if (!subject) return
-    const [dates, start, entries] = await Promise.all([
+    const [dates, start, entries, topics] = await Promise.all([
       fetchActiveDates(subject.id),
       fetchPrepStartDate(),
       fetchSubjectProgress(subject.id),
+      fetchCompletedTopics(user.id, subject.id),
     ])
     setActiveDates(dates)
     setPrepStartDate(start)
     setAllEntries(entries)
-  }, [subject, fetchActiveDates, fetchPrepStartDate, fetchSubjectProgress])
+    setCompletedTopics(topics)
+  }, [subject, fetchActiveDates, fetchPrepStartDate, fetchSubjectProgress, user.id])
 
   useEffect(() => {
     reload()
@@ -96,8 +101,14 @@ export default function SubjectPage({ user }: SubjectPageProps) {
 
   const handleSave = async (data: ProgressFormData) => {
     setSaving(true)
-    const ok = await saveProgress(subject.id, format(selectedDate, 'yyyy-MM-dd'), data)
+    const { newly_completed_topics, studied_topics, ...progressData } = data
+    const dateStr = format(selectedDate, 'yyyy-MM-dd')
+    const ok = await saveProgress(subject.id, dateStr, progressData)
     if (ok) {
+      // Save Done marks tied to this specific date
+      if (newly_completed_topics && newly_completed_topics.length > 0) {
+        await saveCompletedTopics(user.id, subject.id, newly_completed_topics, dateStr)
+      }
       setProgressModalOpen(false)
       await reload()
     }
@@ -105,12 +116,14 @@ export default function SubjectPage({ user }: SubjectPageProps) {
   }
 
   const handleDelete = async () => {
-    await deleteProgress(subject.id, format(selectedDate, 'yyyy-MM-dd'))
+    const dateStr = format(selectedDate, 'yyyy-MM-dd')
+    // Delete Done marks for this date first, then the daily entry
+    await deleteCompletedTopicsForDate(user.id, subject.id, dateStr)
+    await deleteProgress(subject.id, dateStr)
     setProgressModalOpen(false)
     await reload()
   }
 
-  //  Timer session complete → merge hours into today's progress modal 
   const handleSessionComplete = async (hours: number, type: TimerType) => {
     const today = new Date()
     const todayStr = format(today, 'yyyy-MM-dd')
@@ -132,7 +145,6 @@ export default function SubjectPage({ user }: SubjectPageProps) {
     setTimerFilledField(type === 'study' ? 'study_hours' : 'question_hours')
     setProgressModalOpen(true)
   }
-  // 
 
   const { signOut } = useAuth()
   const displayName = (user.user_metadata?.full_name as string) || user.email?.split('@')[0] || 'Aspirant'
@@ -172,16 +184,14 @@ export default function SubjectPage({ user }: SubjectPageProps) {
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
-        <div className='flex flex-row items-start justify-between'>
-          <div className="mb-8 animate-fade-in">
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-6">
+        <div className="flex flex-row items-start justify-between animate-fade-in">
+          <div>
             <h1 className="text-2xl sm:text-3xl font-semibold text-white mb-1">{subject.name}</h1>
             <p className="text-muted text-sm font-mono">{subject.shortName} · GATE 2027 CS/IT</p>
           </div>
-
-          {/* Action buttons — Timer sits alongside History */}
           <div className="flex items-center gap-2">
-            <TimerPiP subject={subject} onSessionComplete={handleSessionComplete} />  {/* ← NEW */}
+            <TimerPiP subject={subject} onSessionComplete={handleSessionComplete} />
             <button
               onClick={() => setHistoryModalOpen(true)}
               className="flex items-center gap-1.5 text-white hover:bg-neutral-800 text-sm px-3 py-1.5 rounded-lg bg-card border border-border transition-all"
@@ -193,7 +203,7 @@ export default function SubjectPage({ user }: SubjectPageProps) {
         </div>
 
         {/* Stats row */}
-        <div className="grid grid-cols-3 gap-3 mb-8">
+        <div className="grid grid-cols-3 gap-3">
           <div className="bg-card border border-border rounded-xl p-4 text-center">
             <CalendarDays className="w-4 h-4 text-muted mx-auto mb-2" />
             <p className="text-white font-mono text-2xl font-medium">{daysLogged}</p>
@@ -211,7 +221,10 @@ export default function SubjectPage({ user }: SubjectPageProps) {
           </div>
         </div>
 
-        {/* Calendar */}
+        {/* Syllabus Progress Chart */}
+        <SubjectProgressChart subject={subject} completedTopics={completedTopics} />
+
+        {/* Activity Calendar */}
         <div className="bg-card border border-border rounded-2xl p-6 sm:p-8 max-w-5xl mx-auto animate-slide-up overflow-hidden">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-white font-semibold text-sm">Activity Calendar</h2>
@@ -251,6 +264,7 @@ export default function SubjectPage({ user }: SubjectPageProps) {
         onDelete={dayProgress ? handleDelete : undefined}
         saving={saving}
         timerFilledField={timerFilledField}
+        completedTopics={completedTopics}
       />
 
       <HistoryModal
