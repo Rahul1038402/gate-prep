@@ -115,8 +115,6 @@ function EntryCard({ entry, onEdit }: { entry: DailyProgress; onEdit: () => void
 }
 
 export default function HistoryModal({ isOpen, onClose, subject, entries, onEditEntry }: HistoryModalProps) {
-  if (!isOpen) return null
-
   const grouped = groupByMonth(entries)
   const months = Object.keys(grouped)
 
@@ -131,6 +129,8 @@ export default function HistoryModal({ isOpen, onClose, subject, entries, onEdit
     }
     return () => { document.body.style.overflow = '' }
   }, [isOpen])
+
+  if (!isOpen) return null
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
