@@ -351,7 +351,7 @@ export default function ProgressModal({
           ) : null}
 
           {/* Row 3: Study Hours + Question Hours */}
-          <div className="flex items-start gap-16 justify-between">
+          <div className="flex sm:flex-row flex-col items-start gap-6 sm:gap-16 justify-between">
             <HourField
               field="study_hours" label="Study Hours" icon={Clock}
               value={form.study_hours} timerFilledField={timerFilledField}
@@ -401,11 +401,11 @@ export default function ProgressModal({
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-border flex items-center justify-between gap-3 shrink-0">
+        <div className="px-6 py-4 border-t border-border flex items-center justify-center sm:justify-between gap-3 shrink-0">
           {existing && onDelete ? (
             <button
               type="button" onClick={onDelete}
-              className="flex items-center gap-1.5 text-red-400 hover:text-red-300 text-sm px-4 py-2.5 rounded-lg hover:bg-red-400/10 transition-all"
+              className="hidden sm:flex items-center gap-1.5 border-red-400 bg-red-400/10 text-red-400 hover:text-red-300 text-sm px-4 py-2.5 rounded-lg hover:bg-red-400/10 transition-all"
             >
               <Trash2 className="w-4 h-4" /> Delete entry
             </button>
@@ -413,19 +413,29 @@ export default function ProgressModal({
 
           <div className="flex items-center gap-3">
             <button
-              type="button" onClick={onClose}
-              className="bg-surface border border-border text-muted hover:text-white rounded-xl px-6 py-2.5 text-sm transition-all hover:border-muted"
-            >
-              Cancel
-            </button>
-            <button
               onClick={handleSave} disabled={saving}
               className="flex items-center justify-center gap-2 bg-amber hover:bg-amber/90 text-black font-semibold rounded-xl px-8 py-2.5 text-sm transition-all disabled:opacity-60 disabled:cursor-not-allowed active:scale-[0.98]"
             >
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : (existing ? 'Update' : 'Save')}
             </button>
+            <button
+              type="button" onClick={onClose}
+              className="bg-surface border border-border text-muted hover:text-white rounded-xl px-6 py-2.5 text-sm transition-all hover:border-muted"
+            >
+              Cancel
+            </button>
           </div>
         </div>
+        {existing && onDelete ? (
+          <div className='mb-4 flex sm:hidden justify-center items-center'>
+            <button
+              type="button" onClick={onDelete}
+              className="flex gap-1.5 border-red-400 bg-red-400/10 text-red-400 hover:text-red-300 text-sm px-4 py-2.5 rounded-lg hover:bg-red-400/10 transition-all"
+            >
+              <Trash2 className="w-4 h-4" /> Delete entry
+            </button>
+          </div>
+        ) : <div />}
       </div>
     </div>
   )
