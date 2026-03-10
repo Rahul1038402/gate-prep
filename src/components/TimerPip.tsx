@@ -267,16 +267,16 @@ function SetupModal({ subject, onStart, onClose }: {
                 )}
 
                 {/* Actions */}
-                <div className="flex gap-2 mt-6">
+                <div className="flex gap-2 mt-12">
                     <button
                         onClick={onClose}
-                        className="flex-1 px-4 py-2.5 rounded-xl border border-border text-muted text-xs font-mono hover:text-white transition-colors"
+                        className="flex-1 px-4 py-2.5 rounded-xl bg-red-400/10 border border-red-400 text-red-400 text-xs font-mono hover:text-red-300 transition-colors"
                     >
                         Cancel
                     </button>
                     <button
                         onClick={() => onStart(mode, type, minutes)}
-                        className="flex-1 px-4 py-2.5 rounded-xl bg-amber/10 border border-amber text-amber text-xs font-mono hover:bg-amber/20 transition-colors"
+                        className="flex-1 px-4 py-2.5 rounded-xl bg-[#4ade80]/10 border border-[#4ade80] text-[#4ade80] text-xs font-mono hover:bg-[#4ade80]/20 transition-colors"
                     >
                         Start →
                     </button>
@@ -355,7 +355,7 @@ function FloatingOverlay({
     const onPointerDown = (e: React.PointerEvent) => {
         dragging.current = true
         dragStart.current = { mx: e.clientX, my: e.clientY, ox: pos.x, oy: pos.y }
-        ;(e.target as HTMLElement).setPointerCapture(e.pointerId)
+            ; (e.target as HTMLElement).setPointerCapture(e.pointerId)
     }
     const onPointerMove = (e: React.PointerEvent) => {
         if (!dragging.current) return
@@ -503,7 +503,7 @@ export default function TimerPiP({ subject, onSessionComplete }: TimerPiPProps) 
         if (mode === 'countdown' && phase === 'running' && elapsed >= countdownTotal) {
             stopTimer()
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [elapsed])
 
     //  Stop 
